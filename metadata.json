@@ -1,0 +1,5 @@
+{
+  "name": "Schengen Randevu Yönetim Sistemi",
+  "description": "An AI-assisted application to manage and automate the search for Schengen visa appointments. Users can add applicants individually or in bulk via Excel, and the system will monitor visa portals for available slots.",
+  "requestFramePermissions": []
+}
