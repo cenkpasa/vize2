@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import * as XLSX from 'xlsx';
-import { Person, Status } from '../types';
+import { Person } from '../types';
 
 interface ExcelImportProps {
     onImport: (people: Omit<Person, 'id' | 'status' | 'appointmentDate'>[]) => void;
@@ -16,8 +16,9 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport }) => {
     const MAPPING_FIELDS = {
         fullName: 'Ad Soyad', passportNo: 'Pasaport No', birthDate: 'Doğum Tarihi',
         phone: 'Telefon', email: 'E-posta', country: 'Ülke (DE,IT..)',
-        portal: 'Portal (idata/vfs)', city: 'Şehir', center: 'Merkez',
+        portal: 'Portal (idata/vfs/asvize...)', city: 'Şehir', center: 'Merkez',
         visaType: 'Vize Tipi', earliestDate: 'En Erken Tarih', latestDate: 'En Geç Tarih',
+        portalUsername: 'Portal Kullanıcı Adı', portalPassword: 'Portal Şifresi',
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,16 +57,27 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport }) => {
     
     const handleImport = () => {
         const newPeople: Omit<Person, 'id' | 'status' | 'appointmentDate'>[] = data.map(row => {
-            const person: any = {};
+            const personData: any = {};
+            let portalUsername = '';
+            let portalPassword = '';
+
             for (const field in MAPPING_FIELDS) {
                 const header = mapping[field];
                 let value = header ? row[header] : '';
                 if (value instanceof Date) {
                     value = value.toISOString().split('T')[0];
                 }
-                person[field] = value || '';
+                
+                if (field === 'portalUsername') {
+                    portalUsername = value || '';
+                } else if (field === 'portalPassword') {
+                    portalPassword = value || '';
+                } else {
+                    personData[field] = value || '';
+                }
             }
-            return person;
+            personData.portalCredentials = { username: portalUsername, password: portalPassword };
+            return personData;
         });
         onImport(newPeople);
         clearMapping();

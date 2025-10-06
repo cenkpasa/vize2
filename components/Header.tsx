@@ -3,7 +3,11 @@ import React from 'react';
 import useDarkMode from '../hooks/useDarkMode';
 import { generateSampleExcel } from '../utils/excelHelper';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+    onLogout: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onLogout }) => {
     const [isDarkMode, toggleDarkMode] = useDarkMode();
 
     const handleDownloadSample = () => {
@@ -11,7 +15,7 @@ const Header: React.FC = () => {
     };
 
     return (
-        <header className="flex justify-between items-center mb-4">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200">
                 Schengen Randevu Yönetim Sistemi <span className="text-base font-normal text-blue-600 dark:text-blue-400">v4.0</span>
             </h1>
@@ -31,6 +35,12 @@ const Header: React.FC = () => {
                     className="px-3 py-1.5 text-sm border border-blue-500 text-blue-500 rounded-md hover:bg-blue-500 hover:text-white transition-colors"
                 >
                     Örnek Excel Şablonu
+                </button>
+                <button
+                    onClick={onLogout}
+                    className="px-3 py-1.5 text-sm border border-red-500 text-red-500 rounded-md hover:bg-red-500 hover:text-white transition-colors"
+                >
+                    Çıkış Yap
                 </button>
             </div>
         </header>

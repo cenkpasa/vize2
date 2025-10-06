@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 
 export const generateSampleExcel = () => {
     const headers = [
-        'fullName', 'passportNo', 'birthDate', 'phone', 'email', 'country', 'portal', 'city', 'center', 'visaType', 'earliestDate', 'latestDate'
+        'fullName', 'passportNo', 'birthDate', 'phone', 'email', 'country', 'portal', 'city', 'center', 'visaType', 'earliestDate', 'latestDate', 'portalUsername', 'portalPassword'
     ];
     const data = [
         {
@@ -18,7 +18,9 @@ export const generateSampleExcel = () => {
             center: 'Istanbul (Avrupa)',
             visaType: 'tourism',
             earliestDate: '2024-09-01',
-            latestDate: '2024-09-30'
+            latestDate: '2024-09-30',
+            portalUsername: 'user_ahmet',
+            portalPassword: 'password123'
         },
         {
             fullName: 'Ayşe Kaya',
@@ -32,7 +34,25 @@ export const generateSampleExcel = () => {
             center: 'Ankara',
             visaType: 'business',
             earliestDate: '2024-10-10',
-            latestDate: '2024-10-20'
+            latestDate: '2024-10-20',
+            portalUsername: 'ayse_k',
+            portalPassword: 'securePassword'
+        },
+        {
+            fullName: 'Mehmet Öztürk',
+            passportNo: 'U24681357',
+            birthDate: '1995-02-28',
+            phone: '5559876543',
+            email: 'mehmet@example.com',
+            country: 'CH',
+            portal: 'tlscontact',
+            city: 'Istanbul',
+            center: 'Istanbul',
+            visaType: 'family',
+            earliestDate: '2024-11-01',
+            latestDate: '2024-11-15',
+            portalUsername: 'mehmet.ozturk',
+            portalPassword: 'anotherPassword'
         }
     ];
 
@@ -42,7 +62,7 @@ export const generateSampleExcel = () => {
     
     // Customize headers
     const headerRow = [
-        'Ad Soyad', 'Pasaport No', 'Doğum Tarihi', 'Telefon', 'E-posta', 'Ülke Kodu (örn: DE)', 'Portal (idata/vfs)', 'Şehir', 'Merkez', 'Vize Tipi', 'En Erken Tarih', 'En Geç Tarih'
+        'Ad Soyad', 'Pasaport No', 'Doğum Tarihi', 'Telefon', 'E-posta', 'Ülke Kodu (örn: DE)', 'Portal (idata/vfs/cosmos...)', 'Şehir', 'Merkez', 'Vize Tipi', 'En Erken Tarih', 'En Geç Tarih', 'Portal Kullanıcı Adı', 'Portal Şifresi'
     ];
     XLSX.utils.sheet_add_aoa(worksheet, [headerRow], { origin: 'A1' });
 

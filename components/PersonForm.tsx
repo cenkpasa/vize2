@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Person } from '../types';
-import { VISA_CENTERS } from '../utils/data';
+import { VISA_CENTERS, PORTALS_REQUIRING_AUTH } from '../utils/data';
 
 interface PersonFormProps {
     addOrUpdatePerson: (person: Omit<Person, 'id' | 'status' | 'appointmentDate'>) => void;
@@ -11,7 +11,8 @@ interface PersonFormProps {
 
 const initialFormState = {
     fullName: '', passportNo: '', birthDate: '', phone: '', email: '', telegramId: '',
-    country: '', portal: '', city: '', center: '', visaType: '', earliestDate: '', latestDate: ''
+    country: '', portal: '', city: '', center: '', visaType: '', earliestDate: '', latestDate: '',
+    portalUsername: '', portalPassword: ''
 };
 
 const PersonForm: React.FC<PersonFormProps> = ({ addOrUpdatePerson, editingPerson, clearEditing }) => {
@@ -33,6 +34,8 @@ const PersonForm: React.FC<PersonFormProps> = ({ addOrUpdatePerson, editingPerso
                 visaType: editingPerson.visaType,
                 earliestDate: editingPerson.earliestDate,
                 latestDate: editingPerson.latestDate,
+                portalUsername: editingPerson.portalCredentials?.username || '',
+                portalPassword: editingPerson.portalCredentials?.password || ''
             });
         } else {
             setFormState(initialFormState);
@@ -41,13 +44,40 @@ const PersonForm: React.FC<PersonFormProps> = ({ addOrUpdatePerson, editingPerso
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormState(prev => ({ ...prev, [name]: value }));
+        setFormState(prev => {
+            const newState = { ...prev, [name]: value };
+            // Reset dependent fields on change
+            if (name === 'country') {
+                newState.portal = '';
+                newState.city = '';
+                newState.center = '';
+            }
+            if (name === 'portal') {
+                newState.city = '';
+                newState.center = '';
+            }
+            if (name === 'city') {
+                newState.center = '';
+            }
+            return newState;
+        });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        addOrUpdatePerson(formState);
+        const { portalUsername, portalPassword, ...personData } = formState;
+        
+        const submissionData: Omit<Person, 'id' | 'status' | 'appointmentDate'> = {
+            ...personData,
+            portalCredentials: {
+                username: portalUsername,
+                password: portalPassword
+            }
+        };
+
+        addOrUpdatePerson(submissionData);
         setFormState(initialFormState);
+        clearEditing();
     };
 
     const handleClearForm = () => {
@@ -55,22 +85,12 @@ const PersonForm: React.FC<PersonFormProps> = ({ addOrUpdatePerson, editingPerso
         clearEditing();
     };
 
+    // Memoized options for dependent dropdowns
     const countryOptions = useMemo(() => Object.keys(VISA_CENTERS), []);
-    const portalOptions = useMemo(() => formState.country ? Object.keys(VISA_CENTERS[formState.country] || {}) : [], [formState.country]);
+    const portalOptions = useMemo(() => formState.country ? Object.keys(VISA_CENTERS[formState.country] || {}).filter(k => k !== 'name') : [], [formState.country]);
     const cityOptions = useMemo(() => formState.portal ? Object.keys(VISA_CENTERS[formState.country]?.[formState.portal] || {}) : [], [formState.country, formState.portal]);
     const centerOptions = useMemo(() => VISA_CENTERS[formState.country]?.[formState.portal]?.[formState.city] || [], [formState.country, formState.portal, formState.city]);
-
-     useEffect(() => {
-        if (!portalOptions.includes(formState.portal)) setFormState(p => ({ ...p, portal: '', city: '', center: '' }));
-    }, [portalOptions, formState.portal]);
-    
-    useEffect(() => {
-        if (!cityOptions.includes(formState.city)) setFormState(p => ({ ...p, city: '', center: '' }));
-    }, [cityOptions, formState.city]);
-
-    useEffect(() => {
-        if (!centerOptions.includes(formState.center)) setFormState(p => ({ ...p, center: '' }));
-    }, [centerOptions, formState.center]);
+    const needsAuth = useMemo(() => PORTALS_REQUIRING_AUTH.includes(formState.portal), [formState.portal]);
 
     const InputField = ({ id, label, required = false, ...props }: any) => (
         <div>
@@ -119,6 +139,11 @@ const PersonForm: React.FC<PersonFormProps> = ({ addOrUpdatePerson, editingPerso
                 </div>
                 <hr className="border-gray-200 dark:border-gray-600"/>
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div className="md:col-span-12">
+                        <div className="p-3 bg-gray-100 dark:bg-gray-700/50 rounded-md text-center">
+                            <span className="font-medium text-gray-800 dark:text-gray-200">Başvuru Yapılan Ülke: 🇹🇷 Türkiye</span>
+                        </div>
+                    </div>
                      <div className="md:col-span-3">
                         <SelectField id="country" label="Ülke" required value={formState.country} onChange={handleInputChange}>
                             <option value="">Seçin…</option>
@@ -130,15 +155,20 @@ const PersonForm: React.FC<PersonFormProps> = ({ addOrUpdatePerson, editingPerso
                             <option value="">Seçin…</option>
                             {portalOptions.map(p => <option key={p} value={p}>{p.toUpperCase()}</option>)}
                         </SelectField>
+                        {needsAuth && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Bu portal için giriş bilgileri gereklidir.
+                            </p>
+                        )}
                     </div>
                     <div className="md:col-span-3">
-                        <SelectField id="city" label="Şehir" required value={formState.city} onChange={handleInputChange} disabled={!formState.portal}>
+                        <SelectField id="city" label="Başvuru Şehri" required value={formState.city} onChange={handleInputChange} disabled={!formState.portal}>
                              <option value="">Seçin…</option>
                             {cityOptions.map(c => <option key={c} value={c}>{c}</option>)}
                         </SelectField>
                     </div>
                     <div className="md:col-span-3">
-                        <SelectField id="center" label="Merkez" required value={formState.center} onChange={handleInputChange} disabled={!formState.city}>
+                        <SelectField id="center" label="Başvuru Merkezi" required value={formState.center} onChange={handleInputChange} disabled={!formState.city}>
                              <option value="">Seçin…</option>
                             {centerOptions.map(c => <option key={c} value={c}>{c}</option>)}
                         </SelectField>
@@ -155,6 +185,17 @@ const PersonForm: React.FC<PersonFormProps> = ({ addOrUpdatePerson, editingPerso
                     <div className="md:col-span-4"><InputField id="earliestDate" label="En Erken Tarih" type="date" value={formState.earliestDate} onChange={handleInputChange} /></div>
                     <div className="md:col-span-4"><InputField id="latestDate" label="En Geç Tarih" type="date" value={formState.latestDate} onChange={handleInputChange} /></div>
                 </div>
+
+                {needsAuth && (
+                    <>
+                        <hr className="border-gray-200 dark:border-gray-600"/>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           <InputField id="portalUsername" label="Portal Kullanıcı Adı" value={formState.portalUsername} onChange={handleInputChange} />
+                           <InputField id="portalPassword" label="Portal Şifresi" type="password" value={formState.portalPassword} onChange={handleInputChange} />
+                        </div>
+                    </>
+                )}
+
                 <div className="flex gap-2">
                     <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
                         {editingPerson ? 'Kişiyi Güncelle' : 'Kişi Ekle'}

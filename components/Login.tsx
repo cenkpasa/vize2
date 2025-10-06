@@ -1,5 +1,8 @@
+
 import React, { useState } from 'react';
 import useDarkMode from '../hooks/useDarkMode';
+import EyeIcon from './icons/EyeIcon';
+import EyeSlashIcon from './icons/EyeSlashIcon';
 
 interface LoginProps {
     onLoginSuccess: () => void;
@@ -9,11 +12,18 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isDarkMode, toggleDarkMode] = useDarkMode();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setError(''); // Clear previous errors
+
+        // Client-side validation
+        if (!username.trim() || !password.trim()) {
+            setError('Kullanıcı adı ve şifre boş bırakılamaz.');
+            return;
+        }
 
         // Hardcoded credentials
         if (username === 'admin' && password === '1234') {
@@ -23,9 +33,14 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         }
     };
 
+    const handleForgotPassword = (e: React.MouseEvent) => {
+        e.preventDefault();
+        alert('Şifre sıfırlama özelliği henüz uygulanmadı.');
+    };
+
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-            <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
+        <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 px-4">
+            <div className="w-full max-w-md p-6 sm:p-8 space-y-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-center text-gray-900 dark:text-white">Giriş Yap</h1>
                     <div className="flex items-center gap-2">
@@ -61,17 +76,25 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                         <label htmlFor="password"className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                             Şifre
                         </label>
-                        <div className="mt-1">
+                        <div className="mt-1 relative">
                             <input
                                 id="password"
                                 name="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 autoComplete="current-password"
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 dark:text-gray-400"
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                                {showPassword ? <EyeSlashIcon /> : <EyeIcon />}
+                            </button>
                         </div>
                     </div>
 
@@ -81,7 +104,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
                     <div className="flex items-center justify-between">
                         <div className="text-sm">
-                            <a href="#" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                            <a href="#" onClick={handleForgotPassword} className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
                                 Şifremi Unuttum?
                             </a>
                         </div>
